@@ -17,13 +17,13 @@ const register = (req, res, next) => {
       res.json({ msg: "Utente Inserito" });
     })
     .catch((err) => {
-      res.json({ msg: err });
+      res.json({ msg: "Utente Già Inserito", err: err });
     });
 };
 
 const login = (req, res, next) => {
   const { name, email, pwd } = req.body;
-  User.findOne({ email: { $eq: email } }).then((user) => {
+  User.findOne({ email: { $eq: email }, name: name }).then((user) => {
     if (user) {
       bcrypt.compare(pwd, user.pwd, (err, result) => {
         if (err) {
