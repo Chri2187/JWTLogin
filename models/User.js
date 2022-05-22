@@ -19,6 +19,7 @@ const UserSchema = new Schema(
     pwd: {
       type: String,
       minlength: 6,
+      required: true
     },
   },
   { timestamps: true }

@@ -1,29 +1,35 @@
-require("dotenv").config();
-const User = require("../models/User");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+require('dotenv').config();
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const register = (req, res, next) => {
-  const hashedPwd = bcrypt.hashSync(req.body.pwd, 10);
-  const user = new User({
-    name: req.body.name,
-    email: req.body.email,
-    pwd: hashedPwd,
-  });
-  // save user on DB
-  user
-    .save()
-    .then((user) => {
-      res.json({ msg: "Utente Inserito" });
-    })
-    .catch((err) => {
-      res.json({ msg: "Utente Già Inserito", err: err });
+  if (req.body.pwd.length > 6) {
+    const hashedPwd = bcrypt.hashSync(req.body.pwd, 10);
+    const user = new User({
+      name: req.body.name,
+      email: req.body.email,
+      pwd: hashedPwd,
     });
+    
+    // save user on DB
+    user
+      .save()
+      .then((user) => {
+        res.json({ msg: 'Utente Inserito', user: user.name, token });
+      })
+      .catch((err) => {
+        res.json({ msg: 'Utente Già Inserito', err: err });
+      });
+  } else {
+    res.json({ err: 'Password minimo 6 caratteri' });
+    res.send();
+  }
 };
 
 const login = (req, res, next) => {
   const { name, email, pwd } = req.body;
-  User.findOne({ email: { $eq: email }, name: name }).then((user) => {
+  User.findOne({ email: { $eq: email } }).then((user) => {
     if (user) {
       bcrypt.compare(pwd, user.pwd, (err, result) => {
         if (err) {
@@ -37,18 +43,18 @@ const login = (req, res, next) => {
             expiresIn: process.env.JWT_LIFE,
           });
           res.json({
-            msg: "Login avvenuto con successo",
+            msg: 'Login avvenuto con successo',
             user: user.name,
             token,
           });
         } else {
           res.json({
-            msg: "Password Errata",
+            err: 'Password Errata',
           });
         }
       });
     } else {
-      res.json({ msg: "utente non trovato" });
+      res.json({ err: 'utente non trovato' });
     }
   });
 };
